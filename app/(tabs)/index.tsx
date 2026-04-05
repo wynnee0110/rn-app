@@ -1,22 +1,36 @@
 import images from "@/constants/images";
 import "@/global.css";
-import { FlatList } from "react-native";
+import { useUser } from "@clerk/expo";
+import { Image as ExpoImage } from "expo-image";
+import { FlatList, Image, Text, View } from "react-native";
 
 import ListHeading from "@/components/ListHeading";
 import SubscriptionCard from "@/components/SubscriptionCard";
 import UpcomingSubscriptionCard from "@/components/UpcomingSubscriptionCard";
-import { HOME_BALANCE, HOME_SUBSCRIPTIONS, HOME_USER, UPCOMING_SUBSCRIPTIONS } from "@/constants/data";
+import { HOME_BALANCE, HOME_SUBSCRIPTIONS, UPCOMING_SUBSCRIPTIONS } from "@/constants/data";
 import { icons } from "@/constants/icons";
 import { formatCurrency } from "@/lib/utils";
 import dayjs from "dayjs";
 import { styled } from "nativewind";
-import { useState } from "react";
-import { Image, Text, View } from "react-native";
+import { useMemo, useState } from "react";
 import { SafeAreaView as RNSafeAreaView } from "react-native-safe-area-context";
 
 const SafeAreaView = styled(RNSafeAreaView);
+
+function displayNameForUser(user: ReturnType<typeof useUser>["user"]) {
+  if (!user) return "Account";
+  if (user.username) return user.username;
+  const name = [user.firstName, user.lastName].filter(Boolean).join(" ");
+  if (name) return name;
+  return user.primaryEmailAddress?.emailAddress ?? "Account";
+}
+
 export default function App() {
+  const { user, isLoaded: userLoaded } = useUser();
   const [expandedSubscriptionId, setExpandedSubscriptionId] = useState<string | null>(null);
+
+  const displayName = useMemo(() => displayNameForUser(user), [user]);
+
   return (
     <SafeAreaView className="flex-1 bg-background p-5">
 
@@ -25,8 +39,17 @@ export default function App() {
           <>
                 <View className="home-header">
         <View className="home-user">
-          <Image source={images.avatar} className="home-avatar" />
-          <Text className="home-user-name">{HOME_USER.name}
+          {user?.imageUrl ? (
+            <ExpoImage
+              source={{ uri: user.imageUrl }}
+              className="home-avatar"
+              contentFit="cover"
+            />
+          ) : (
+            <Image source={images.avatar} className="home-avatar" />
+          )}
+          <Text className="home-user-name">
+            {!userLoaded ? "…" : displayName}
           </Text>
 
         </View>
@@ -84,3 +107,4 @@ export default function App() {
 
   );
 }
+

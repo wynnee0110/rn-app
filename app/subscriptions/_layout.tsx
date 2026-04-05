@@ -1,12 +1,16 @@
-import { View, Text } from 'react-native'
-import React from 'react'
+import { useAuth } from "@clerk/expo";
+import { Redirect, Stack } from "expo-router";
 
-const SubscriptionDetails = () => {
-  return (
-    <View>
-      <Text>Subscriptions</Text>
-    </View>
-  )
+export default function SubscriptionsStackLayout() {
+  const { isLoaded, isSignedIn } = useAuth();
+
+  if (!isLoaded) {
+    return null;
+  }
+
+  if (!isSignedIn) {
+    return <Redirect href="/(auth)/sign-in" />;
+  }
+
+  return <Stack screenOptions={{ headerShown: false }} />;
 }
-
-export default SubscriptionDetails
